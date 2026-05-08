@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEA TIME ☕</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #ffd6ec;
+  --electric: #00ff6a;
+  --neon: #80ffb8;
+  --accent: #00d4ff;
+  --chrome: #1a1a2e;
+  --silver: #0d0d1a;
+  --wrong: #ff3c6e;
+  --close: #ff9500;
+  --correct: #00ff6a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--navy);
+  color: var(--silver);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: radial-gradient(ellipse at top, #ffcce8 0%, #ffd6ec 60%);
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,106,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,106,0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+@keyframes scan { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+.scanline {
+  position:fixed;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,106,0.12),transparent);
+  animation:scan 10s linear infinite;pointer-events:none;z-index:100;
+}
+.container { max-width:640px;margin:0 auto;padding:24px 20px 80px;position:relative;z-index:1; }
+
+/* HEADER */
+header { text-align:center;padding:28px 0 20px; }
+.logo-pre { font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:6px;color:#c0006a;opacity:.7;margin-bottom:8px; }
+h1 {
+  font-family:'Orbitron',sans-serif;font-size:clamp(40px,11vw,68px);font-weight:900;letter-spacing:4px;
+  background:linear-gradient(135deg,#00ff6a 0%,#00d4ff 55%,#00a8cc 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;
+}
+.tagline { font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;color:#7a004a;opacity:.65;margin-top:8px; }
+.divider { height:1px;margin:18px 0;background:linear-gradient(90deg,transparent,#00cc55,#00d4ff,transparent);opacity:.5; }
+.meta-bar { display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:11px;color:#00aa44;opacity:.8;letter-spacing:2px;margin-bottom:22px; }
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.live-dot { display:inline-block;width:6px;height:6px;border-radius:50%;background:#00cc55;box-shadow:0 0 6px #00cc55;animation:pulse 2s ease-in-out infinite;vertical-align:middle;margin-right:6px; }
+
+/* PROGRESS */
+.progress-row { display:flex;gap:8px;margin-bottom:24px; }
+.pip { flex:1;height:3px;border-radius:2px;background:rgba(0,255,106,0.15);transition:background .4s; }
+.pip.active { background:var(--electric);box-shadow:0 0 8px rgba(0,255,106,.8); }
+.pip.r-correct { background:var(--correct);box-shadow:0 0 6px rgba(0,255,106,.6); }
+.pip.r-close   { background:var(--close);box-shadow:0 0 6px rgba(255,149,0,.5); }
+.pip.r-wrong   { background:var(--wrong);box-shadow:0 0 6px rgba(255,60,110,.5); }
+
+/* CARD */
+.card {
+  background:linear-gradient(135deg,rgba(255,255,255,.82),rgba(255,240,250,.78));
+  backdrop-filter: blur(8px);
+  border:1px solid rgba(0,200,80,.3);border-radius:2px;padding:28px 26px;
+  position:relative;overflow:hidden;margin-bottom:14px;
+  box-shadow: 0 4px 24px rgba(255,100,180,.12);
+}
+.card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--electric),var(--accent)); }
+.cc { position:absolute;width:14px;height:14px;border-color:#00aa44;border-style:solid;opacity:.4; }
+.cc.tl{top:7px;left:7px;border-width:1px 0 0 1px}.cc.tr{top:7px;right:7px;border-width:1px 1px 0 0}
+.cc.bl{bottom:7px;left:7px;border-width:0 0 1px 1px}.cc.br{bottom:7px;right:7px;border-width:0 1px 1px 0}
+
+.q-counter { font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:4px;color:#007baa;opacity:.9;margin-bottom:14px; }
+.q-text { font-family:'Rajdhani',sans-serif;font-size:clamp(17px,3.5vw,21px);font-weight:600;color:#1a0a14;line-height:1.55;margin-bottom:24px; }
+
+/* INPUT */
+.input-row { display:flex;gap:10px; }
+.year-input {
+  flex:1;background:rgba(255,255,255,.7);border:1px solid rgba(0,200,80,.4);border-radius:2px;
+  color:#007733;font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;
+  letter-spacing:4px;text-align:center;padding:12px 12px;outline:none;
+  transition:border-color .2s,box-shadow .2s;-moz-appearance:textfield;
+}
+.year-input::-webkit-outer-spin-button,.year-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.year-input::placeholder{color:rgba(0,180,80,.25)}
+.year-input:focus{border-color:#00cc55;box-shadow:0 0 16px rgba(0,200,80,.25),inset 0 0 10px rgba(0,200,80,.06);}
+.year-input:disabled{opacity:.4}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}60%{transform:translateX(6px)}80%{transform:translateX(-3px)}}
+.year-input.shake{animation:shake .35s ease}
+
+.sub-btn {
+  padding:0 22px;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:3px;background:transparent;border:1px solid #00aa44;color:#007733;
+  cursor:pointer;border-radius:2px;white-space:nowrap;transition:all .2s;position:relative;overflow:hidden;
+}
+.sub-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,106,.12),rgba(0,212,255,.1));opacity:0;transition:opacity .2s}
+.sub-btn:hover::before{opacity:1}
+.sub-btn:hover{box-shadow:0 0 18px rgba(0,255,106,.4);transform:translateY(-1px)}
+.sub-btn:active{transform:translateY(0)}
+.sub-btn:disabled{opacity:.2;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* FEEDBACK */
+@keyframes chipIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.q-result {
+  display:none;margin-top:16px;padding:14px 16px;border-radius:2px;
+  font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:1px;
+  animation:chipIn .3s ease;
+}
+.q-result.r-correct{background:rgba(0,180,80,.1);border:1px solid #00aa44;color:#006622}
+.q-result.r-close  {background:rgba(220,140,0,.08);border:1px solid #cc7700;color:#8a4d00}
+.q-result.r-wrong  {background:rgba(220,30,80,.07);border:1px solid #cc1144;color:#880022}
+.q-result .hint-line{display:block;margin-bottom:4px}
+.q-result .ans-line{font-family:'Orbitron',sans-serif;font-size:19px;font-weight:700;letter-spacing:3px;opacity:.9}
+
+.next-btn {
+  width:100%;margin-top:12px;padding:14px;
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:4px;
+  background:transparent;border:1px solid rgba(0,180,80,.35);color:#007733;
+  cursor:pointer;border-radius:2px;transition:all .2s;display:none;
+}
+.next-btn:hover{border-color:#00cc55;box-shadow:0 0 14px rgba(0,200,80,.2);transform:translateY(-1px)}
+
+/* SUMMARY */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+#summaryCard{display:none;animation:fadeUp .5s ease}
+.sum-inner {
+  background:linear-gradient(135deg,rgba(255,255,255,.82),rgba(255,240,250,.78));
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(0,200,80,.28);border-radius:2px;padding:36px 26px;
+  position:relative;overflow:hidden;text-align:center;
+  box-shadow:0 4px 24px rgba(255,100,180,.12);
+}
+.sum-inner::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#00cc55,#00d4ff);}
+.score-lbl{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:5px;color:#7a004a;opacity:.6;margin-bottom:10px}
+.score-big{font-family:'Orbitron',sans-serif;font-size:72px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#00cc55,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.score-denom{font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:3px;color:#7a004a;opacity:.5;margin-bottom:20px}
+.verdict{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:5px}
+.verdict-sub{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:#3a001a;opacity:.6;margin-bottom:26px}
+
+/* Recap */
+.recap{margin:0 0 24px;text-align:left}
+.recap-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,160,80,.15);gap:10px}
+.recap-row:last-child{border-bottom:none}
+.recap-sym{font-size:16px;flex-shrink:0}
+.recap-q{color:#2a0018;opacity:.75;flex:1;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;line-height:1.35}
+.recap-yr{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.recap-guessed{font-family:'Share Tech Mono',monospace;font-size:11px;color:#7a004a;opacity:.5;letter-spacing:1px}
+.recap-correct{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px}
+.rc-correct{color:#008833}.rc-close{color:#cc7700}.rc-wrong{color:#cc1144}
+
+.share-grid{font-family:'Share Tech Mono',monospace;font-size:28px;letter-spacing:8px;margin-bottom:20px}
+.share-btn{display:inline-block;padding:13px 36px;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:4px;background:linear-gradient(135deg,rgba(0,200,80,.1),rgba(0,212,255,.08));border:1px solid #00aa44;color:#007733;cursor:pointer;border-radius:2px;transition:all .2s;margin-bottom:10px}
+.share-btn:hover{background:linear-gradient(135deg,rgba(0,200,80,.18),rgba(0,212,255,.14));box-shadow:0 0 16px rgba(0,200,80,.25);transform:translateY(-1px)}
+.copy-toast{font-family:'Share Tech Mono',monospace;font-size:11px;color:#008833;letter-spacing:2px;opacity:0;transition:opacity .3s;height:18px;margin-bottom:14px}
+.copy-toast.show{opacity:1}
+.next-info{font-family:'Share Tech Mono',monospace;font-size:10px;color:#7a004a;opacity:.45;letter-spacing:2px}
+
+/* How */
+.how-btn{display:block;width:100%;text-align:center;font-family:'Share Tech Mono',monospace;font-size:11px;color:#007733;opacity:.6;letter-spacing:3px;cursor:pointer;padding:12px 0;background:none;border:none;transition:opacity .2s}
+.how-btn:hover{opacity:1}
+.how-panel{display:none;background:rgba(0,255,106,.06);border:1px solid rgba(0,180,80,.2);border-radius:2px;padding:18px 22px;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:12px;line-height:1.9;color:#1a1a2e;opacity:.85;letter-spacing:1px}
+.how-panel .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px}
+.how-panel .dot{color:#00aa44;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="container">
+
+  <header>
+    <div class="logo-pre">☕ daily pop culture · est. 2024</div>
+    <h1>TEA TIME</h1>
+    <div class="tagline">GUESS THE YEAR · 5 ROUNDS DAILY</div>
+  </header>
+
+  <div class="divider"></div>
+
+  <div class="meta-bar">
+    <span><span class="live-dot"></span>PUZZLE #<span id="puzzleNum">—</span></span>
+    <span id="dateDisplay">—</span>
+  </div>
+
+  <div class="progress-row">
+    <div class="pip" id="pip0"></div>
+    <div class="pip" id="pip1"></div>
+    <div class="pip" id="pip2"></div>
+    <div class="pip" id="pip3"></div>
+    <div class="pip" id="pip4"></div>
+  </div>
+
+  <!-- Active question -->
+  <div class="card" id="qCard">
+    <div class="cc tl"></div><div class="cc tr"></div><div class="cc bl"></div><div class="cc br"></div>
+    <div class="q-counter" id="qCounter">:: QUESTION 1 OF 5 ::</div>
+    <div class="q-text" id="qText">Loading…</div>
+    <div class="input-row">
+      <input type="number" id="yearInput" class="year-input" placeholder="YEAR" min="1990" max="2026" autocomplete="off" inputmode="numeric">
+      <button class="sub-btn" id="subBtn" onclick="submitAnswer()">SUBMIT</button>
+    </div>
+    <div class="q-result" id="qResult">
+      <span class="hint-line" id="hintLine"></span>
+      <span class="ans-line" id="ansLine"></span>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()"><span id="nextLabel">NEXT →</span></button>
+  </div>
+
+  <!-- Summary -->
+  <div id="summaryCard">
+    <div class="sum-inner">
+      <div class="cc tl"></div><div class="cc tr"></div><div class="cc bl"></div><div class="cc br"></div>
+      <div class="score-lbl">TODAY'S SCORE</div>
+      <div class="score-big" id="scoreBig">0</div>
+      <div class="score-denom">OUT OF 5</div>
+      <div class="verdict" id="verdictText"></div>
+      <div class="verdict-sub" id="verdictSub"></div>
+      <div class="divider"></div>
+      <div class="recap" id="recapList"></div>
+      <div class="share-grid" id="shareGrid"></div>
+      <button class="share-btn" onclick="shareResult()">SHARE RESULTS</button>
+      <div class="copy-toast" id="copyToast">COPIED TO CLIPBOARD ✓</div>
+      <div class="next-info">NEW TEA DROPS AT MIDNIGHT</div>
+    </div>
+  </div>
+
+  <button class="how-btn" onclick="toggleHow()">[ HOW TO PLAY ]</button>
+  <div class="how-panel" id="howPanel">
+    <div class="row"><span class="dot">▸</span><span>5 pop culture events per day — guess the year each one happened.</span></div>
+    <div class="row"><span class="dot">▸</span><span>Type a year between 1990 and 2026, then press Submit or hit Enter.</span></div>
+    <div class="row"><span class="dot">▸</span><span>💚 Exact year. &nbsp;🩷 Within 2 years. &nbsp;🫧 Off by more.</span></div>
+    <div class="row"><span class="dot">▸</span><span>One guess per question — no do-overs.</span></div>
+    <div class="row"><span class="dot">▸</span><span>Share your emoji grid — no plot spoilers.</span></div>
+    <div class="row"><span class="dot">▸</span><span>New puzzle every day at midnight.</span></div>
+  </div>
+
+</div>
+<script>
+const ALL_EVENTS = [
+  { text: "Kim Kardashian's sex tape with Ray J leaks online, turning her into a household name overnight.", year: 2007 },
+  { text: "Britney Spears shaves her head at a Tarzana hair salon, sending the tabloid world into a frenzy.", year: 2007 },
+  { text: "Jennifer Aniston and Brad Pitt announce their separation after four and a half years of marriage.", year: 2005 },
+  { text: "Paris Hilton is sentenced to 45 days in jail for violating probation.", year: 2007 },
+  { text: "Beyoncé drops her visual album Lemonade and the world tries to figure out who 'Becky with the good hair' is.", year: 2016 },
+  { text: "Lindsay Lohan checks into rehab for the first time, at the Wonderland Center in Los Angeles.", year: 2007 },
+  { text: "Taylor Swift and Jake Gyllenhaal briefly date — the internet won't forgive him for it for over a decade.", year: 2010 },
+  { text: "Kourtney Kardashian and Travis Barker marry in a Gothic-themed ceremony in Portofino, Italy.", year: 2022 },
+  { text: "Mariah Carey's New Year's Eve performance on Dick Clark's Rockin' Eve goes spectacularly wrong on live television.", year: 2016 },
+  { text: "Nicki Minaj and Cardi B get into a physical altercation at a Harper's Bazaar Icons NYFW party.", year: 2018 },
+  { text: "The first season of The Real Housewives of New York City premieres on Bravo.", year: 2008 },
+  { text: "Meghan Markle and Prince Harry announce they are stepping back as senior royals — 'Megxit.'", year: 2020 },
+  { text: "Taylor Swift and Calvin Harris break up; she's photographed with Tom Hiddleston just weeks later.", year: 2016 },
+  { text: "Sex and the City airs its series finale, 'An American Girl in Paris.'", year: 2004 },
+  { text: "Miley Cyrus twerks on Robin Thicke at the MTV VMAs, officially ending her Disney era.", year: 2013 },
+  { text: "Jennifer Lopez and Ben Affleck reunite romantically — Bennifer is officially back.", year: 2021 },
+  { text: "Angelina Jolie and Brad Pitt marry at their Château Miraval estate in France.", year: 2014 },
+  { text: "The first season of Keeping Up with the Kardashians premieres on E!", year: 2007 },
+  { text: "Glee premieres on Fox, making 'Don't Stop Believin'' cool again for about three years.", year: 2009 },
+  { text: "Adele releases 21, the album that soundtracks virtually every breakup of the decade.", year: 2011 },
+  { text: "Rihanna and Chris Brown attend the Grammy Awards together — hours later, the assault incident occurs.", year: 2009 },
+  { text: "Kim Kardashian is robbed at gunpoint in her Paris hotel room; $10 million in jewelry is taken.", year: 2016 },
+  { text: "Prince Harry and Meghan Markle give their bombshell interview to Oprah Winfrey.", year: 2021 },
+  { text: "Kylie Jenner gives birth to daughter Stormi Webster with Travis Scott, confirming her secret pregnancy.", year: 2018 },
+  { text: "Amber Heard and Johnny Depp's defamation trial is livestreamed, consuming the internet for weeks.", year: 2022 },
+  { text: "Lady Gaga arrives at the Met Gala wearing a dress made entirely of raw meat.", year: 2010 },
+  { text: "Khloé Kardashian's pregnancy is confirmed the same week photos emerge of Tristan Thompson cheating.", year: 2018 },
+  { text: "The first season of Love Island UK premieres on ITV2.", year: 2015 },
+  { text: "Britney Spears is placed under a conservatorship controlled largely by her father, Jamie Spears.", year: 2008 },
+  { text: "The conservatorship controlling Britney Spears' life and estate is formally terminated by a Los Angeles judge.", year: 2021 },
+  { text: "Anna Nicole Smith is found dead in her Hollywood, Florida hotel room at age 39.", year: 2007 },
+  { text: "Amy Winehouse is found dead at her home in Camden, London, at age 27.", year: 2011 },
+  { text: "Destiny's Child announces a hiatus; Beyoncé officially launches her solo career with Dangerously in Love.", year: 2003 },
+  { text: "The first episode of Desperate Housewives airs on ABC.", year: 2004 },
+  { text: "Paris Hilton and Nicole Richie star in the premiere of The Simple Life on Fox.", year: 2003 },
+  { text: "Jennifer Lopez and Ben Affleck call off their first wedding just days before it's scheduled.", year: 2003 },
+  { text: "Mean Girls is released in theaters, giving the world the Burn Book and 'on Wednesdays we wear pink.'", year: 2004 },
+  { text: "Kanye West interrupts Taylor Swift's VMA acceptance speech for 'You Belong With Me.'", year: 2009 },
+  { text: "Selena Gomez publicly reveals she received a kidney transplant, donated by her best friend Francia Raisa.", year: 2017 },
+  { text: "Caitlyn Jenner publicly comes out as a transgender woman in a landmark interview with Diane Sawyer.", year: 2015 },
+  { text: "Keeping Up with the Kardashians airs its series finale after 20 seasons.", year: 2021 },
+  { text: "The Bachelor premieres on ABC — the first rose ceremony in reality TV history.", year: 2002 },
+  { text: "Justin Bieber and Hailey Baldwin marry in a New York City courthouse.", year: 2018 },
+  { text: "Shakira and Gerard Piqué announce their separation after 11 years together.", year: 2022 },
+  { text: "The first season of RuPaul's Drag Race premieres on Logo TV.", year: 2009 },
+  { text: "Gossip Girl premieres on The CW.", year: 2007 },
+  { text: "Taylor Swift releases Folklore, an unexpected indie-folk pivot that earns her Album of the Year at the Grammys.", year: 2020 },
+  { text: "Shakira's 'Hips Don't Lie' ft. Wyclef Jean becomes the biggest-selling global single of the year.", year: 2006 },
+  { text: "Jersey Shore premieres on MTV and Snooki becomes an unlikely national icon.", year: 2009 },
+  { text: "Solange Knowles is caught on elevator security footage attacking Jay-Z at the Met Gala afterparty.", year: 2014 },
+  { text: "Taylor Swift begins her record-breaking Eras Tour, which grosses over $1 billion.", year: 2023 },
+  { text: "Kim Kardashian and Kanye West marry in Florence, Italy — dubbed 'the wedding of the century.'", year: 2014 },
+  { text: "Megan Thee Stallion is shot in both feet by Tory Lanez following an argument after a party.", year: 2020 },
+  { text: "Bridgerton drops on Netflix on Christmas Day, becoming the platform's most-watched series at the time.", year: 2020 },
+  { text: "The Hills premieres as a Laguna Beach spinoff, following Lauren Conrad navigating LA.", year: 2006 },
+  { text: "Lance Bass of NSYNC publicly comes out as gay in a People magazine cover story.", year: 2006 },
+  { text: "Cardi B accidentally posts a topless photo to her Instagram Story and refuses to apologize.", year: 2020 },
+  { text: "Lindsay Lohan gets married to Bader Shammas in a ceremony in Dubai.", year: 2023 },
+  { text: "The final season of Game of Thrones airs to massive backlash; the petition to remake it hits 1M+ signatures.", year: 2019 },
+  { text: "Lori Loughlin and Mossimo Giannulli plead guilty in the college admissions scandal.", year: 2020 },
+  { text: "Jennifer Aniston and Brad Pitt reunite backstage at the SAG Awards — the internet loses its mind.", year: 2020 },
+  { text: "Ariana Grande and Pete Davidson announce their engagement after just weeks of dating.", year: 2018 },
+  { text: "Britney Spears' memoir The Woman in Me is released, detailing her years under the conservatorship.", year: 2023 },
+  { text: "Olivia Wilde is served custody papers onstage at CinemaCon, in front of hundreds of people.", year: 2022 },
+  { text: "Will Smith walks onstage at the Oscars and slaps presenter Chris Rock over a joke about Jada Pinkett Smith.", year: 2022 },
+  { text: "Jada Pinkett Smith reveals on the Red Table Talk that she and Will Smith have been separated since 2016.", year: 2023 },
+  { text: "The O.C. premieres on Fox, making Newport Beach and mismatched friendships aspirational.", year: 2003 },
+  { text: "Elin Nordegren files for divorce from Tiger Woods following his public cheating scandal.", year: 2010 },
+  { text: "Katy Perry and Russell Brand announce they are separating after 14 months of marriage.", year: 2011 },
+  { text: "Nicole Kidman and Tom Cruise announce their separation after 10 years of marriage.", year: 2001 },
+  { text: "Brad Pitt and Angelina Jolie go public with their relationship after meeting on the set of Mr. & Mrs. Smith.", year: 2005 },
+  { text: "Jessica Simpson and Nick Lachey's reality show Newlyweds premieres on MTV.", year: 2003 },
+  { text: "American Idol premieres on Fox and Kelly Clarkson wins the inaugural season.", year: 2002 },
+  { text: "Jennifer Lopez appears on the Grammy red carpet in the iconic green Versace dress.", year: 2000 },
+  { text: "Britney Spears and Justin Timberlake attend the American Music Awards in matching all-denim outfits.", year: 2001 },
+  { text: "The Bachelorette premieres on ABC — Trista Sutter becomes the first lead.", year: 2003 },
+  { text: "Madonna kisses both Britney Spears and Christina Aguilera onstage at the MTV Video Music Awards.", year: 2003 },
+  { text: "Nick Lachey and Jessica Simpson announce their separation after three years of marriage.", year: 2005 },
+  { text: "Tom Cruise jumps on Oprah's couch professing his love for Katie Holmes.", year: 2005 },
+  { text: "Whitney Houston passes away the night before the Grammy Awards, found in her Beverly Hilton hotel room.", year: 2012 },
+  { text: "Demi Moore and Ashton Kutcher separate after six years of marriage.", year: 2011 },
+  { text: "Kim Kardashian and Kris Humphries file for divorce after 72 days of marriage.", year: 2011 },
+  { text: "Fantasia Barrino wins Season 3 of American Idol, becoming one of the show's most celebrated contestants.", year: 2004 },
+  { text: "Laguna Beach: The Real Orange County premieres on MTV.", year: 2004 },
+  { text: "Spice Girls announce their reunion stadium tour — without Victoria Beckham.", year: 2018 },
+  { text: "Taylor Swift publicly calls out Scooter Braun over the acquisition of her original master recordings.", year: 2019 },
+  { text: "Chrissy Teigen is called out by Courtney Stodden and others for past bullying messages.", year: 2021 },
+  { text: "Demi Lovato is hospitalized following a near-fatal overdose at her Hollywood Hills home.", year: 2018 },
+  { text: "Solange Knowles releases A Seat at the Table, earning critical acclaim and a Grammy nomination.", year: 2016 },
+  { text: "Kim Kardashian and Pete Davidson debut their relationship publicly.", year: 2021 },
+  { text: "Pamela Anderson and Tommy Lee's private honeymoon tape is leaked without their consent.", year: 1996 },
+  { text: "Destiny's Child releases 'Survivor,' the anthem that defines their public image amid member drama.", year: 2001 },
+  { text: "Caitlyn Jenner stars in her own E! reality series, I Am Cait, following her transition.", year: 2015 },
+  { text: "Lizzo faces a lawsuit from former tour dancers alleging sexual harassment and a hostile work environment.", year: 2023 },
+  { text: "Machine Gun Kelly and Megan Fox go public with their relationship — matching outfits and blood vials follow.", year: 2020 },
+  { text: "Jennifer Lopez and Ben Affleck's second Bennifer ends — they file for divorce.", year: 2024 },
+  { text: "Nene Leakes debuts on The Real Housewives of Atlanta in its first season.", year: 2008 },
+  { text: "Kim Kardashian is announced as a guest co-host and eventual host consideration on The Price Is Right spoof... actually hosts Saturday Night Live.", year: 2021 },
+  { text: "Khloé Kardashian confirms Tristan Thompson is the father of her second child via surrogate, born while he was dating someone else.", year: 2022 },
+  { text: "Millie Bobby Brown and Jake Bongiovi announce their engagement.", year: 2023 },
+
+  // ── BATCH 2 ──
+  { text: "Beyoncé performs at the Super Bowl halftime show and secretly reunites Destiny's Child onstage.", year: 2013 },
+  { text: "Jennifer Lopez performs at the Super Bowl halftime show alongside Shakira.", year: 2020 },
+  { text: "Rihanna performs at the Super Bowl halftime show — and reveals she is pregnant with her second child.", year: 2023 },
+  { text: "Kim Kardashian breaks the internet by appearing nearly nude on the cover of Paper magazine.", year: 2014 },
+  { text: "Kanye West announces he is running for president of the United States.", year: 2020 },
+  { text: "Kanye West legally changes his name to Ye.", year: 2021 },
+  { text: "Kylie Jenner is declared the world's youngest self-made billionaire by Forbes.", year: 2019 },
+  { text: "Teresa Giudice of Real Housewives of New Jersey is sentenced to 15 months in federal prison for fraud.", year: 2014 },
+  { text: "Bethenny Frankel exits The Real Housewives of New York City for the first time.", year: 2010 },
+  { text: "Lisa Vanderpump exits The Real Housewives of Beverly Hills amid a 'Puppygate' fallout.", year: 2019 },
+  { text: "Vanderpump Rules stars Tom Sandoval and Ariana Madix break up after he is revealed to have had an affair with castmate Rachel Leviss.", year: 2023 },
+  { text: "Scheana Shay marries Brock Davies in a destination wedding in Cancún, filmed for Vanderpump Rules.", year: 2022 },
+  { text: "The Real Housewives of Salt Lake City premieres on Bravo, introducing audiences to Jen Shah.", year: 2020 },
+  { text: "Jen Shah of RHOSLC is arrested on charges of wire fraud and money laundering during filming.", year: 2021 },
+  { text: "Mary-Kate Olsen and Olivier Sarkozy quietly marry in a private ceremony in New York.", year: 2015 },
+  { text: "Hilary Duff marries hockey player Mike Comrie in a ceremony in Santa Barbara.", year: 2010 },
+  { text: "Jessica Alba co-founds The Honest Company, pivoting from actress to entrepreneur.", year: 2012 },
+  { text: "Blake Lively and Ryan Reynolds marry in a private ceremony in South Carolina.", year: 2012 },
+  { text: "Kim Kardashian and Pete Davidson break up after nine months of dating.", year: 2022 },
+  { text: "Selena Gomez and Justin Bieber break up for the final time after years of on-and-off dating.", year: 2018 },
+  { text: "Selena Gomez releases Rare, her most critically acclaimed solo album.", year: 2020 },
+  { text: "Miley Cyrus and Liam Hemsworth announce their separation just eight months after marrying.", year: 2019 },
+  { text: "Miley Cyrus releases Flowers, her breakup anthem that becomes one of the fastest-selling singles ever.", year: 2023 },
+  { text: "Gwen Stefani and Gavin Rossdale announce their divorce after 13 years of marriage.", year: 2015 },
+  { text: "Gwen Stefani and Blake Shelton get engaged after meeting on The Voice.", year: 2020 },
+  { text: "Hailey Baldwin reveals in a YouTube video that she and Justin Bieber secretly married months earlier.", year: 2019 },
+  { text: "Nick Jonas and Priyanka Chopra marry in a multi-day Hindu and Christian wedding ceremony in India.", year: 2018 },
+  { text: "Sophie Turner and Joe Jonas announce their divorce after four years of marriage.", year: 2023 },
+  { text: "Taylor Swift and Harry Styles date briefly — the 'One Direction' fandom does not take it well.", year: 2012 },
+  { text: "Taylor Swift releases Reputation, her response to years of media scrutiny and feuds.", year: 2017 },
+  { text: "Taylor Swift announces she has re-recorded her first six albums after losing her masters to Scooter Braun.", year: 2019 },
+  { text: "Taylor Swift releases Taylor's Version of Fearless, her first re-recorded album.", year: 2021 },
+  { text: "Taylor Swift and Travis Kelce go public with their relationship at a Kansas City Chiefs game.", year: 2023 },
+  { text: "Nicki Minaj announces her retirement from music — and then walks it back days later.", year: 2019 },
+  { text: "Nicki Minaj marries Kenneth Petty in a private ceremony in Los Angeles.", year: 2019 },
+  { text: "Cardi B files for divorce from Offset, citing irreconcilable differences — then withdraws the filing.", year: 2020 },
+  { text: "Cardi B and Offset definitively separate after six years together.", year: 2024 },
+  { text: "Khloe Kardashian gives birth to her daughter True Thompson while Tristan cheating scandal breaks.", year: 2018 },
+  { text: "Rob Kardashian posts explicit photos of Blac Chyna on Instagram, sparking a major public fallout.", year: 2017 },
+  { text: "Tyga and Kylie Jenner go public with their relationship — she is 17 at the time.", year: 2015 },
+  { text: "Khloé Kardashian and Lamar Odom divorce is finalized after Odom's hospitalization.", year: 2016 },
+  { text: "Scott Disick and Kourtney Kardashian split for the final time after nine years together.", year: 2015 },
+  { text: "Nicole Richie gives birth to daughter Harlow with Joel Madden of Good Charlotte.", year: 2008 },
+  { text: "Paris Hilton publicly comes out as a DJ and performs a set at the Grammy afterparty.", year: 2012 },
+  { text: "Paris Hilton reveals in her documentary that she invented the selfie pose — the internet debates it.", year: 2020 },
+  { text: "Paris Hilton marries Carter Reum in a lavish three-day celebration at her father's Bel-Air estate.", year: 2021 },
+  { text: "Heidi Montag undergoes 10 plastic surgery procedures in a single day, making headlines worldwide.", year: 2010 },
+  { text: "Lauren Conrad's book L.A. Candy debuts at number one on the New York Times bestseller list.", year: 2009 },
+  { text: "Kristin Cavallari and Jay Cutler announce their divorce after ten years together.", year: 2020 },
+  { text: "Chrissy Teigen publicly apologizes to Courtney Stodden and others for years of online bullying.", year: 2021 },
+  { text: "Chrissy Teigen and John Legend share the devastating loss of their son Jack during pregnancy.", year: 2020 },
+  { text: "Gabrielle Union is fired from America's Got Talent and speaks out about a toxic work environment.", year: 2019 },
+  { text: "Jennifer Lawrence wins the Best Actress Oscar for Silver Linings Playbook and trips on the stairs.", year: 2013 },
+  { text: "Faye Dunaway and Warren Beatty announce the wrong Best Picture winner at the Oscars — La La Land instead of Moonlight.", year: 2017 },
+  { text: "Eminem releases The Slim Shady LP, introducing his alter ego and sparking massive cultural debate.", year: 1999 },
+  { text: "Destiny's Child releases 'Say My Name,' which goes to number one and wins two Grammys.", year: 2000 },
+  { text: "Jennifer Lopez releases her debut album On the 6, establishing her as a pop star as well as an actress.", year: 1999 },
+  { text: "Mariah Carey releases The Emancipation of Mimi, staging one of music's most celebrated comebacks.", year: 2005 },
+  { text: "Beyoncé performs a surprise set at Coachella — later released as the concert film Homecoming.", year: 2018 },
+  { text: "Nicki Minaj and Cardi B release competing singles on the same day in an unofficial rap battle.", year: 2017 },
+  { text: "Lady Gaga wins an Oscar for Best Original Song for Shallow from A Star Is Born.", year: 2019 },
+  { text: "Adele releases 30, her divorce album, to record-breaking first-week sales.", year: 2021 },
+  { text: "Olivia Rodrigo releases drivers license, breaking streaming records and launching a new pop era.", year: 2021 },
+  { text: "Billie Eilish becomes the youngest artist to win all four major Grammy categories in a single night.", year: 2020 },
+  { text: "Ariana Grande releases Thank U, Next — named after her string of public breakups — and it breaks streaming records.", year: 2018 },
+  { text: "Ariana Grande marries Dalton Gomez in a tiny, intimate ceremony at her Montecito home.", year: 2021 },
+  { text: "Ariana Grande and Dalton Gomez announce their separation after two years of marriage.", year: 2023 },
+  { text: "Harry Styles releases his debut solo album after leaving One Direction.", year: 2017 },
+  { text: "One Direction announces an indefinite hiatus, sending millions of fans into mourning.", year: 2016 },
+  { text: "Zayn Malik quietly leaves One Direction, becoming the first member to go solo.", year: 2015 },
+  { text: "Zayn Malik and Perrie Edwards break off their engagement via text message, according to reports.", year: 2015 },
+  { text: "Dua Lipa releases Future Nostalgia, the album that defines the early pandemic era of pop music.", year: 2020 },
+  { text: "Lizzo releases Truth Hurts and it goes viral two years after its original release.", year: 2019 },
+  { text: "SZA releases SOS, which spends 10 weeks at number one on the Billboard 200.", year: 2022 },
+  { text: "Bad Bunny becomes the first non-English-language artist to be Spotify's most-streamed act of the year.", year: 2020 },
+  { text: "Sabrina Carpenter releases Short n Sweet, which makes her a mainstream pop superstar.", year: 2024 },
+  { text: "Charli XCX releases Brat, becoming the surprise album of the summer and spawning a cultural aesthetic.", year: 2024 },
+  { text: "Drake and Kendrick Lamar engage in a weeks-long public rap beef culminating in Not Like Us.", year: 2024 },
+  { text: "Britney Spears and Sam Asghari marry in a private ceremony at her Thousand Oaks home.", year: 2022 },
+  { text: "Sam Asghari files for divorce from Britney Spears after 14 months of marriage.", year: 2023 },
+  { text: "Nicole Kidman and Keith Urban quietly marry in a Sydney ceremony.", year: 2006 },
+  { text: "Reese Witherspoon and Ryan Phillippe announce their separation after seven years of marriage.", year: 2006 },
+  { text: "Jennifer Garner and Ben Affleck announce their separation — the day after his DUI arrest.", year: 2015 },
+  { text: "Gwyneth Paltrow and Chris Martin announce their separation and coin the phrase 'conscious uncoupling.'", year: 2014 },
+  { text: "Johnny Depp and Vanessa Paradis separate after 14 years together and two children.", year: 2012 },
+  { text: "Amber Heard files for a temporary restraining order against Johnny Depp, alleging abuse.", year: 2016 },
+  { text: "Beyoncé and Jay-Z launch their joint On the Run Tour, fueling rumors about their marriage.", year: 2014 },
+  { text: "Jay-Z releases 4:44, widely interpreted as a response to Lemonade and an admission of infidelity.", year: 2017 },
+  { text: "Nicki Minaj calls out Miley Cyrus at the VMAs live on stage: 'Miley, what's good?'", year: 2015 },
+  { text: "Kim Kardashian reveals her new bleached blonde hair at Paris Fashion Week.", year: 2023 },
+  { text: "Britney Spears posts a video dancing with knives on Instagram, prompting a wellness check.", year: 2023 },
+  { text: "Margot Robbie's Barbie becomes the highest-grossing film ever directed by a woman.", year: 2023 },
+  { text: "Pamela Anderson appears at the Oscars in a no-makeup look, becoming the most-talked-about moment of the night.", year: 2024 },
+  { text: "Pamela Anderson stars in The Last Showgirl, earning her first major awards-season recognition.", year: 2024 },
+  { text: "Hailey Bieber launches Rhode, her minimalist skincare brand, to immediate sell-outs.", year: 2022 },
+  { text: "Kylie Jenner launches Kylie Cosmetics with a lip kit that sells out in under a minute.", year: 2015 },
+  { text: "Rihanna launches Fenty Beauty with 40 foundation shades, changing the beauty industry standard.", year: 2017 },
+  { text: "Victoria Beckham launches her eponymous fashion label at New York Fashion Week.", year: 2008 },
+  { text: "Khloe Kardashian launches Good American, a size-inclusive denim brand.", year: 2016 },
+  { text: "Kim Kardashian launches SKIMS, her shapewear line that eventually becomes valued at over $3 billion.", year: 2019 },
+  { text: "The Real Housewives of Miami is revived on Peacock after being cancelled by Bravo years earlier.", year: 2021 },
+  { text: "The first season of The Real Housewives of Beverly Hills premieres, introducing Lisa Vanderpump and Taylor Armstrong.", year: 2010 },
+  { text: "The first season of The Real Housewives of New Jersey premieres, introducing the table-flip heard round the world.", year: 2009 },
+  { text: "Teresa Giudice flips a table at Danielle Staub at the RHONJ reunion, creating one of reality TV's most iconic moments.", year: 2009 },
+  { text: "Erika Jayne of RHOBH is embroiled in a massive legal scandal involving her estranged husband Tom Girardi.", year: 2020 },
+  { text: "RHONY is rebooted as The Real Housewives of New York City: Legacy with an entirely new cast.", year: 2023 },
+  { text: "Tiffany New York Pollard becomes a reality TV icon after her run on Flavor of Love and I Love New York.", year: 2006 },
+  { text: "America's Next Top Model premieres on UPN with Tyra Banks as host and executive producer.", year: 2003 },
+  { text: "Tyra Banks has a meltdown on America's Next Top Model telling contestant Tiffany to 'be quiet.'", year: 2005 },
+  { text: "Project Runway premieres on Bravo, launching Tim Gunn's 'make it work' into the cultural lexicon.", year: 2004 },
+  { text: "Heidi Klum exits Project Runway after 12 seasons as host.", year: 2012 },
+  { text: "The first season of Survivor premieres on CBS, launching the modern reality competition era.", year: 2000 },
+  { text: "Big Brother premieres on CBS, introducing live feeds and the diary room to American audiences.", year: 2000 },
+  { text: "Keeping Up with the Kardashians spin-off The Kardashians premieres on Hulu.", year: 2022 },
+  { text: "Meghan Markle makes her first post-royal public appearance at the Invictus Games in The Hague.", year: 2022 },
+  { text: "Prince Harry's memoir Spare is published, with explosive claims about the royal family.", year: 2023 },
+  { text: "King Charles III is officially crowned at Westminster Abbey.", year: 2023 },
+  { text: "Queen Elizabeth II passes away at Balmoral Castle at age 96, ending a 70-year reign.", year: 2022 },
+
+  // ── BATCH 3: 90s & EARLY 2000s ──
+  { text: "TLC releases CrazySexyCool, which goes on to become the best-selling album by a girl group in US history.", year: 1994 },
+  { text: "Left Eye of TLC burns down her boyfriend Andre Rison's mansion during an argument.", year: 1994 },
+  { text: "Left Eye of TLC dies in a car crash in Honduras at age 30 while filming a documentary.", year: 2002 },
+  { text: "The Spice Girls release Wannabe, their debut single, and Spice Mania grips the world.", year: 1996 },
+  { text: "Geri Halliwell shocks the world by quitting the Spice Girls mid-tour.", year: 1998 },
+  { text: "The Spice Girls perform at the Closing Ceremony of the Atlanta Olympics in full platform shoes.", year: 1996 },
+  { text: "Tupac Shakur is shot and killed in a drive-by shooting in Las Vegas at age 25.", year: 1996 },
+  { text: "The Notorious B.I.G. is shot and killed in a drive-by shooting in Los Angeles at age 24.", year: 1997 },
+  { text: "Princess Diana dies in a car crash in the Pont de l'Alma tunnel in Paris.", year: 1997 },
+  { text: "Princess Diana gives her landmark Panorama interview, saying 'there were three of us in this marriage.'", year: 1995 },
+  { text: "Prince Charles and Princess Diana's divorce is finalized.", year: 1996 },
+  { text: "Monica Lewinsky's affair with President Clinton becomes public, leading to his impeachment.", year: 1998 },
+  { text: "Britney Spears releases Baby One More Time, becoming the best-selling single by a teenage solo artist.", year: 1998 },
+  { text: "NSYNC releases Bye Bye Bye and the music video hand-puppet choreography becomes iconic.", year: 2000 },
+  { text: "NSYNC breaks up after Justin Timberlake quietly walks away to pursue a solo career.", year: 2002 },
+  { text: "Backstreet Boys release I Want It That Way, becoming the defining boy band anthem of the era.", year: 1999 },
+  { text: "The feud between Backstreet Boys and NSYNC consumes teen pop fandom for the entire year.", year: 2000 },
+  { text: "Justin Timberlake releases Cry Me a River, widely interpreted as being about Britney Spears.", year: 2002 },
+  { text: "Britney Spears and Justin Timberlake break up after three years together.", year: 2002 },
+  { text: "Christina Aguilera releases Dirrty, her controversial video that marks a hard pivot from her pop debut.", year: 2002 },
+  { text: "Christina Aguilera releases Beautiful, the ballad that defines her legacy for a generation.", year: 2002 },
+  { text: "Eminem and Mariah Carey engage in a public feud after he claims they dated and she denies it.", year: 2002 },
+  { text: "Whitney Houston appears on Being Bobby Brown in a state that shocks audiences and sparks concern.", year: 2005 },
+  { text: "Whitney Houston's interview with Diane Sawyer produces the iconic line: 'crack is whack.'", year: 2002 },
+  { text: "Destiny's Child member LeToya Luckett and LaTavia Roberson are replaced mid-career, sparking a public feud.", year: 2000 },
+  { text: "Aaliyah dies in a plane crash in the Bahamas at age 22 shortly after finishing a music video.", year: 2001 },
+  { text: "Janet Jackson's wardrobe malfunction with Justin Timberlake at the Super Bowl halftime show shocks America.", year: 2004 },
+  { text: "Jennifer Lopez and Marc Anthony marry in a secret ceremony in Beverly Hills.", year: 2004 },
+  { text: "Jennifer Lopez and Marc Anthony announce their separation after seven years of marriage.", year: 2011 },
+  { text: "Mariah Carey has a public breakdown on TRL at MTV's New York studios, arriving with an ice cream cart.", year: 2001 },
+  { text: "Mariah Carey's film Glitter and its soundtrack are released to catastrophic critical and commercial failure.", year: 2001 },
+  { text: "Destiny's Child releases Bills Bills Bills, sparking widespread debate about the lyrics' expectations of men.", year: 1999 },
+  { text: "Will Smith slaps a man who cuts in line at a party — just kidding, he wins Best Actor at the Oscars for Ali.", year: 2002 },
+  { text: "Eminem wins the Oscar for Best Original Song for Lose Yourself, but does not attend the ceremony.", year: 2003 },
+  { text: "The first season of American Idol UK — Pop Idol — premieres in the UK, launching Will Young and Gareth Gates.", year: 2001 },
+  { text: "Kelly Clarkson and Justin Guarini star in From Justin to Kelly, one of the most critically panned films of the decade.", year: 2003 },
+  { text: "Ruben Studdard barely defeats Clay Aiken in the most-watched American Idol finale at the time.", year: 2003 },
+  { text: "William Hung auditions for American Idol with She Bangs and becomes an unlikely viral phenomenon.", year: 2004 },
+  { text: "Paris Hilton and Kim Kardashian are photographed together at a party, years before Kim becomes famous.", year: 2006 },
+  { text: "Carmen Electra and Dennis Rodman marry in Las Vegas — the marriage is annulled nine days later.", year: 1998 },
+  { text: "Pamela Anderson and Tommy Lee marry after knowing each other for 96 hours.", year: 1995 },
+  { text: "Pamela Anderson and Tommy Lee divorce after three years of tumultuous marriage.", year: 1998 },
+  { text: "Jennifer Lopez arrives at the MTV VMAs in a sheer Versace bodysuit, stopping the show.", year: 2000 },
+  { text: "Lil' Kim attends the VMAs wearing a single pasty and a purple jumpsuit, with Diana Ross touching her chest.", year: 1999 },
+  { text: "Brandy and Monica release The Boy Is Mine, which stays at number one for 13 weeks.", year: 1998 },
+  { text: "Monica and Brandy's public rivalry becomes one of the defining celebrity feuds of the late 90s.", year: 1998 },
+  { text: "Lauryn Hill releases The Miseducation of Lauryn Hill, winning five Grammys and changing R&B forever.", year: 1998 },
+  { text: "Lauryn Hill wins five Grammy Awards in one night, the most ever by a female artist at that time.", year: 1999 },
+  { text: "Ricky Martin comes out as gay, writing on his website 'I am a fortunate homosexual man.'", year: 2010 },
+  { text: "Ricky Martin performs Livin' La Vida Loca at the Grammys, launching his crossover into mainstream pop.", year: 1999 },
+  { text: "Jennifer Aniston's 'Rachel' haircut becomes the most requested salon style of the decade.", year: 1995 },
+  { text: "Friends premieres on NBC, introducing the world to Central Perk and a generation-defining sitcom.", year: 1994 },
+  { text: "The final episode of Friends airs, drawing over 52 million viewers in the US alone.", year: 2004 },
+  { text: "Dawson's Creek premieres on The WB, launching the careers of Katie Holmes and Joshua Jackson.", year: 1998 },
+  { text: "Buffy the Vampire Slayer premieres on The WB as a TV series, based on the 1992 film.", year: 1997 },
+  { text: "Sex and the City premieres on HBO, making cosmopolitans and Manolos aspirational for a generation.", year: 1998 },
+  { text: "Ally McBeal wins the Golden Globe for Best Comedy Series and Calista Flockhart graces the cover of Time.", year: 1998 },
+  { text: "The Sopranos premieres on HBO, immediately redefining what prestige television could be.", year: 1999 },
+  { text: "Will & Grace premieres on NBC, becoming the most-watched sitcom featuring gay lead characters.", year: 1998 },
+  { text: "The Real World: New Orleans season airs, featuring one of the show's most dramatic casts ever.", year: 2000 },
+  { text: "Road Rules premieres on MTV as a spinoff of The Real World, launching the challenge franchise.", year: 1995 },
+  { text: "Blind Date premieres on syndicated TV, turning awkward first dates into primetime entertainment.", year: 1999 },
+  { text: "Who Wants to Be a Millionaire premieres on ABC, becoming the highest-rated show of the 1999–2000 season.", year: 1999 },
+  { text: "Temptation Island premieres on Fox, causing immediate moral outrage and massive ratings.", year: 2001 },
+  { text: "Joe Millionaire premieres on Fox — the twist being that the supposed millionaire is actually broke.", year: 2003 },
+  { text: "The Swan premieres on Fox, a makeover show in which women undergo extreme plastic surgery to compete in a pageant.", year: 2004 },
+  { text: "The Anna Nicole Show premieres on E!, turning her life into a surreal reality series.", year: 2002 },
+  { text: "Newlyweds: Nick and Jessica premieres, making Jessica Simpson's obliviousness national entertainment.", year: 2003 },
+  { text: "Meet the Barkers premieres on MTV, following Blink-182 drummer Travis Barker and model Shanna Moakler.", year: 2005 },
+  { text: "Tara Reid's botched liposuction is accidentally exposed at a party, and the photos go everywhere.", year: 2004 },
+  { text: "Colin Farrell's private sex tape is leaked, becoming one of the first major celebrity tape scandals of the internet age.", year: 2003 },
+  { text: "Winona Ryder is caught shoplifting at a Saks Fifth Avenue in Beverly Hills.", year: 2001 },
+  { text: "Winona Ryder is convicted of grand theft and vandalism and sentenced to community service.", year: 2002 },
+  { text: "Tonya Harding's ex-husband hires a man to attack rival figure skater Nancy Kerrigan's knee.", year: 1994 },
+  { text: "O.J. Simpson leads police on a slow-speed Bronco chase broadcast live on national television.", year: 1994 },
+  { text: "O.J. Simpson is acquitted of the murders of Nicole Brown Simpson and Ron Goldman.", year: 1995 },
+  { text: "Will Smith and Jada Pinkett Smith get married in a private ceremony in Baltimore.", year: 1997 },
+  { text: "Jada Pinkett Smith reveals she has alopecia at the Oscars — the moment before the slap.", year: 2022 },
+  { text: "Julia Roberts wins the Best Actress Oscar for Erin Brockovich, giving a lengthy, memorable speech.", year: 2001 },
+  { text: "Halle Berry becomes the first Black woman to win the Academy Award for Best Actress, for Monster's Ball.", year: 2002 },
+  { text: "Denzel Washington wins Best Actor the same night, making it the first time two Black actors won lead acting Oscars.", year: 2002 },
+  { text: "Gwyneth Paltrow wins the Best Actress Oscar for Shakespeare in Love and cries through her entire speech.", year: 1999 },
+  { text: "Cher performs If I Could Turn Back Time in a fishnet bodysuit on a Navy battleship for the music video.", year: 1989 },
+  { text: "Rosie O'Donnell comes out as gay on her own talk show, saying she did it to support a Florida adoption bill.", year: 2002 },
+  { text: "Ellen DeGeneres comes out on the cover of Time magazine with the headline 'Yep, I'm Gay.'", year: 1997 },
+  { text: "Ellen DeGeneres' sitcom Ellen has her character also come out, making it the first gay lead on network TV.", year: 1997 },
+  { text: "The Ellen DeGeneres Show premieres in syndication, quickly becoming daytime TV's dominant force.", year: 2003 },
+  { text: "Britney Spears marries childhood friend Jason Alexander in a Las Vegas ceremony — annulled 55 hours later.", year: 2004 },
+  { text: "Britney Spears and Kevin Federline marry in a surprise second ceremony in California.", year: 2004 },
+  { text: "Britney Spears files for divorce from Kevin Federline after two years and two children.", year: 2006 },
+  { text: "Kevin Federline releases his debut rap album Playing with Fire to near-universal mockery.", year: 2006 },
+  { text: "Nick Carter and Paris Hilton briefly date, making them one of the most tabloid-covered couples of the era.", year: 2003 },
+  { text: "Lindsay Lohan and Hilary Duff publicly feud over Aaron Carter, turning their teen fandoms against each other.", year: 2004 },
+  { text: "Lindsay Lohan stars in Freaky Friday opposite Jamie Lee Curtis, her last major critical success.", year: 2003 },
+  { text: "Mary-Kate Olsen seeks treatment for an eating disorder, pulling the twins out of the spotlight briefly.", year: 2004 },
+  { text: "Nicole Richie is arrested for DUI, driving the wrong way on a freeway in Los Angeles.", year: 2006 },
+  { text: "Paris Hilton's debut single Stars Are Blind reaches number 18 on the Billboard Hot 100.", year: 2006 },
+  { text: "Destiny's Child goes on indefinite hiatus after the Destiny Fulfilled tour, effectively ending the group.", year: 2005 },
+];
+
+const Q_PER_DAY = 5;
+function getPuzzleNum() {
+  return Math.floor((new Date() - new Date('2024-01-01')) / 86400000) + 1;
+}
+function seededShuffle(arr, seed) {
+  const a = arr.slice();
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function getDailySet() {
+  const pn = getPuzzleNum();
+  // Reshuffle the full list every 5 puzzles so each "week" feels fresh
+  const epoch = Math.floor((pn - 1) / ALL_EVENTS.length);
+  const shuffled = seededShuffle(ALL_EVENTS, pn + epoch * 999);
+  const offset = ((pn - 1) * Q_PER_DAY) % ALL_EVENTS.length;
+  return Array.from({length: Q_PER_DAY}, (_, i) => shuffled[(offset + i) % ALL_EVENTS.length]);
+}
+function todayKey() {
+  const d = new Date();
+  return `tt3_${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+function getResultType(g, c) {
+  const d = Math.abs(g - c);
+  return d === 0 ? 'correct' : d <= 2 ? 'close' : 'wrong';
+}
+function getSymbol(r) { return r==='correct'?'💚':r==='close'?'🩷':'🫧'; }
+
+let events = [], currentQ = 0, answers = [], gameOver = false;
+
+function init() {
+  events = getDailySet();
+  const d = new Date();
+  document.getElementById('dateDisplay').textContent =
+    d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  document.getElementById('puzzleNum').textContent = getPuzzleNum();
+
+  const saved = localStorage.getItem(todayKey());
+  if (saved) {
+    const s = JSON.parse(saved);
+    answers = s.answers; gameOver = s.gameOver; currentQ = answers.length;
+    answers.forEach((a,i) => setPip(i, a.result));
+    if (gameOver) { document.getElementById('qCard').style.display='none'; showSummary(); return; }
+  }
+
+  renderQ(currentQ);
+  document.getElementById('yearInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAnswer();
+  });
+}
+
+function setPip(i, r) {
+  document.getElementById('pip'+i).className = 'pip r-'+r;
+}
+
+function renderQ(qi) {
+  document.getElementById('qCounter').textContent = `:: QUESTION ${qi+1} OF ${Q_PER_DAY} ::`;
+  document.getElementById('qText').textContent = events[qi].text;
+  document.getElementById('qResult').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('subBtn').disabled = false;
+  const inp = document.getElementById('yearInput');
+  inp.value = ''; inp.disabled = false;
+  document.getElementById('pip'+qi).className = 'pip active';
+  setTimeout(() => inp.focus(), 60);
+}
+
+function submitAnswer() {
+  const inp = document.getElementById('yearInput');
+  const val = parseInt(inp.value);
+  if (!val || val < 1990 || val > 2026) {
+    inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 400);
+    inp.focus(); return;
+  }
+  const correct = events[currentQ].year;
+  const result = getResultType(val, correct);
+  answers.push({ guessed: val, correct, result });
+
+  // Feedback
+  const diff = Math.abs(val - correct);
+  const dir = val < correct ? 'LATER ▶' : '◀ EARLIER';
+  let hintText, ansText;
+  if (result === 'correct') {
+    hintText = '🟦  EXACT YEAR — ICONIC';
+    ansText = '';
+  } else if (result === 'close') {
+    hintText = `🟡  SO CLOSE · TRY ${dir}`;
+    ansText = `ANSWER: ${correct}`;
+  } else {
+    hintText = `⬛  OFF BY ${diff} · GO ${dir}`;
+    ansText = `ANSWER: ${correct}`;
+  }
+  const res = document.getElementById('qResult');
+  res.className = 'q-result r-'+result;
+  document.getElementById('hintLine').textContent = hintText;
+  document.getElementById('ansLine').textContent = ansText;
+  res.style.display = 'block';
+
+  setPip(currentQ, result);
+  inp.disabled = true;
+  document.getElementById('subBtn').disabled = true;
+  currentQ++;
+
+  const isLast = currentQ >= Q_PER_DAY;
+  if (isLast) gameOver = true;
+  saveState();
+
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  document.getElementById('nextLabel').textContent = isLast ? 'SEE RESULTS →' : `QUESTION ${currentQ+1} OF 5 →`;
+}
+
+function nextQuestion() {
+  if (gameOver) { document.getElementById('qCard').style.display='none'; showSummary(); return; }
+  renderQ(currentQ);
+}
+
+function showSummary() {
+  document.getElementById('summaryCard').style.display = 'block';
+  const correct = answers.filter(a=>a.result==='correct').length;
+  document.getElementById('scoreBig').textContent = correct;
+  const vs = [
+    ['SPILLED ON YOURSELF','honey, the tea spilled you','var(--wrong)'],
+    ['LUKEWARM AT BEST','you knew a little something','var(--wrong)'],
+    ['DECENT SIP','you follow the drama','var(--close)'],
+    ['HOT TEA','you live for this stuff','var(--close)'],
+    ['FULL KETTLE','you ARE the tabloid','var(--correct)'],
+  ];
+  const v = vs[correct];
+  document.getElementById('verdictText').textContent = v[0];
+  document.getElementById('verdictText').style.color = v[2];
+  document.getElementById('verdictSub').textContent = v[1];
+
+  const recap = document.getElementById('recapList');
+  recap.innerHTML = '';
+  answers.forEach((a,i) => {
+    const q = events[i].text.length > 72 ? events[i].text.slice(0,70)+'…' : events[i].text;
+    const row = document.createElement('div');
+    row.className = 'recap-row';
+    row.innerHTML = `
+      <span class="recap-sym">${getSymbol(a.result)}</span>
+      <span class="recap-q">${q}</span>
+      <span class="recap-yr">
+        <span class="recap-guessed">YOU: ${a.guessed}</span>
+        <span class="recap-correct rc-${a.result}">${a.correct}</span>
+      </span>`;
+    recap.appendChild(row);
+  });
+
+  document.getElementById('shareGrid').textContent = answers.map(a=>getSymbol(a.result)).join('');
+}
+
+function buildShareText() {
+  const correct = answers.filter(a=>a.result==='correct').length;
+  const symbols = answers.map(a=>getSymbol(a.result)).join('');
+  return `☕ TEA TIME #${getPuzzleNum()}\n${correct}/5\n\n${symbols}\n\nteatime.gg`;
+}
+
+function shareResult() {
+  navigator.clipboard.writeText(buildShareText()).then(() => {
+    const t = document.getElementById('copyToast');
+    t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200);
+  }).catch(()=>alert(buildShareText()));
+}
+
+function saveState() {
+  localStorage.setItem(todayKey(), JSON.stringify({answers, gameOver}));
+}
+
+function toggleHow() {
+  const p = document.getElementById('howPanel');
+  p.style.display = p.style.display==='block' ? 'none' : 'block';
+}
+
+init();
+</script>
+</body>
+</html>
